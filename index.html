@@ -3,15 +3,11 @@
 <head>
     <meta charset="utf-8">
   <title>Генератор таблицы</title>
+  <link rel="stylesheet" href="style.css">
   <script src="node_modules/faker/dist/faker.js"></script>
-  <style>
-    #table {
-      height: 500px;
-      overflow-y: scroll;
-    }
-  </style>
 </head>
 <body>
+  <div class="container">
   <h1>Генератор таблицы</h1>
 
   <label for="region">Регион:</label>
@@ -22,17 +18,22 @@
   </select>
 
   <label for="errorCount">Количество ошибок:</label>
-  <input type="range" id="errorCount" min="0" max="20" step="1">
+  <input type="range" id="errorCount" min="0" max="20" step="0.5" onchange="updateInputValue(this.value)">
+  <input type="text" id="errorCountInput" value="">
 
   <label for="seed">Seed:</label>
   <input type="text" id="seed">
   <button id="randomSeed">Random</button>
-
   <button id="regenerate">Регенерация</button>
-
-  <table id="table"></table>
-
+</div>
+  <div class="container">
+    <table id="table"></table>
+  </div>
   <script>
+    function updateInputValue(value) {
+      document.getElementById("errorCountInput").value = value;
+    }
+
     let currentPage = 1;
     const pageSize = 20;
     let tableData = [];
@@ -62,130 +63,175 @@
           'Адрес': generateAddress(region),
           'Телефон': generatePhoneNumber(region),
         };
-    
-        for (let j = 0; j < errorCount; j++) {
-          const field = faker.random.arrayElement(Object.keys(row));
-          row[field] = 'ОШИБКА: ' + row[field];
+
+        if (i < pageSize * currentPage - errorCount) {
+          data.push(row);
+        } else {
+          if(region=='США'){
+            const errorRow = {
+            'Номер': generateInvalidData('number'),
+            'Случайный идентификатор': generateInvalidData('uuid'),
+            'ФИО': generateInvalidData('name'),
+            'Адрес': generateInvalidData('address'),
+            'Телефон': generateInvalidData('phone'),
+          };
+          data.push(errorRow);
+          }else{
+            const errorRow = {
+            'Номер': generateInvalidDataSHA('number'),
+            'Случайный идентификатор': generateInvalidDataSHA('uuid'),
+            'ФИО': generateInvalidDataSHA('name'),
+            'Адрес': generateInvalidDataSHA('address'),
+            'Телефон': generateInvalidDataSHA('phone'),
+          };
+          data.push(errorRow);
+          }
+          
         }
-        data.push(row);
       }
       return data;
     }
 
-    function generateName(region) {
-  switch (region) {
-    case 'США':
-      faker.setLocale('en');
-      return faker.name.findName();
-    case 'Польша':
-      faker.setLocale('pl');
-      return faker.name.findName();
-    case 'Беларусь':
-      faker.setLocale('ru');
-      return faker.name.findName();
-    default:
-      return faker.name.findName();
-  }
-}
+    function generateInvalidData(type) {
+      switch (type) {
+        case 'number':
+          return faker.random.number();
+        case 'uuid':
+          return faker.random.uuid();
+        case 'name':
+          return generateName('Беларусь');
+        case 'address':
+          return generateAddress('Беларусь');
+        case 'phone':
+          return generatePhoneNumber('Беларусь');
+      }
+    }
 
+    function generateInvalidDataSHA(type) {
+      switch (type) {
+        case 'number':
+          return faker.random.number();
+        case 'uuid':
+          return faker.random.uuid();
+        case 'name':
+          return generateName('США');
+        case 'address':
+          return generateAddress('США');
+        case 'phone':
+          return generatePhoneNumber('США');
+      }
+    }
+
+    function generateName(region) {
+      switch (region) {
+        case 'США':
+          faker.setLocale('en');
+          return faker.name.findName();
+        case 'Польша':
+          faker.setLocale('pl');
+          return faker.name.findName();
+        case 'Беларусь':
+          faker.setLocale('ru');
+          return faker.name.findName();
+        default:
+          return faker.name.findName();
+    }
+  }
 
     function generateAddress(region) {
         switch (region) {
-    case 'США':
-      faker.setLocale('en');
-      return faker.address.streetAddress();
-    case 'Польша':
-      faker.setLocale('pl');
-      return faker.address.streetAddress();
-    case 'Беларусь':
-      faker.setLocale('ru');
-      return faker.address.streetAddress();
-    default:
-    return faker.address.streetAddress();
-  }
+            case 'США':
+                faker.setLocale('en');
+                return faker.address.streetAddress();
+            case 'Польша':
+                faker.setLocale('pl');
+                return faker.address.streetAddress();
+            case 'Беларусь':
+                faker.setLocale('ru');
+                return faker.address.streetAddress();
+            default:
+                return faker.address.streetAddress();
+        }
     }
+
     function generatePhoneNumber(region) {
-  switch (region) {
-    case 'США':
-      return formatPhoneNumber(faker.phone.phoneNumber('##########'), '1-###-###-####');
-    case 'Польша':
-      return formatPhoneNumber(faker.phone.phoneNumber('#########'), '## ### ## ##');
-    case 'Беларусь':
-      return formatPhoneNumber(faker.phone.phoneNumber('#########'), '+375 29 ###-##-##');
-    default:
-      return faker.phone.phoneNumber();
-  }
-}
-
-function formatPhoneNumber(phoneNumber, format) {
-  const digits = phoneNumber.replace(/\D/g, '');
-  let formattedNumber = '';
-  let digitIndex = 0;
-
-  for (let i = 0; i < format.length; i++) {
-    if (format[i] === '#') {
-      formattedNumber += digits[digitIndex] || '';
-      digitIndex++;
-    } else {
-      formattedNumber += format[i];
+        switch (region) {
+            case 'США':
+                return formatPhoneNumber(faker.phone.phoneNumber('##########'), '1-###-###-####');
+            case 'Польша':
+                return formatPhoneNumber(faker.phone.phoneNumber('#########'), '## ### ## ##');
+            case 'Беларусь':
+                return formatPhoneNumber(faker.phone.phoneNumber('#########'), '+375 29 ###-##-##');
+            default:
+                return faker.phone.phoneNumber();
+        }
     }
-  }
 
-  return formattedNumber;
-}
+    function formatPhoneNumber(phoneNumber, format) {
+        const digits = phoneNumber.replace(/\D/g, '');
+        let formattedNumber = '';
+        let digitIndex = 0;
 
+        for (let i = 0; i < format.length; i++) {
+            if (format[i] === '#') {
+                formattedNumber += digits[digitIndex] || '';
+                digitIndex++;
+            } else {
+                formattedNumber += format[i];
+            }
+        }
 
+        return formattedNumber;
+    }
 
     function renderTable() {
-      const tableElement = document.getElementById('table');
-      tableElement.innerHTML = '';
+        const tableElement = document.getElementById('table');
+        tableElement.innerHTML = '';
 
-      const thead = document.createElement('thead');
-      const tbody = document.createElement('tbody');
+        const thead = document.createElement('thead');
+        const tbody = document.createElement('tbody');
 
-      const headerRow = document.createElement('tr');
-      for (const key in tableData[0]) {
-        const th = document.createElement('th');
-        th.textContent = key;
-        headerRow.appendChild(th)
-    }
-      thead.appendChild(headerRow);
-
-      const startIndex = (currentPage - 1) * pageSize;
-      const endIndex = currentPage * pageSize;
-
-      for (let i = startIndex; i < endIndex; i++) {
-        if (i >= tableData.length) {
-          break;
+        const headerRow = document.createElement('tr');
+        for (const key in tableData[0]) {
+            const th = document.createElement('th');
+            th.textContent = key;
+            headerRow.appendChild(th);
         }
-        const rowData = tableData[i];
-        const row = document.createElement('tr');
-        for (const key in rowData) {
-          const cell = document.createElement('td');
-          cell.textContent = rowData[key];
-          row.appendChild(cell);
-        }
-        tbody.appendChild(row);
-      }
+        thead.appendChild(headerRow);
 
-      tableElement.appendChild(thead);
-      tableElement.appendChild(tbody);
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = currentPage * pageSize;
+
+        for (let i = startIndex; i < endIndex; i++) {
+            if (i >= tableData.length) {
+                break;
+            }
+            const rowData = tableData[i];
+            const row = document.createElement('tr');
+            for (const key in rowData) {
+                const cell = document.createElement('td');
+                cell.textContent = rowData[key];
+                row.appendChild(cell);
+            }
+            tbody.appendChild(row);
+        }
+
+        tableElement.appendChild(thead);
+        tableElement.appendChild(tbody);
     }
 
     function loadMoreData() {
-      const tableElement = document.getElementById('table');
-      const windowBottom = window.pageYOffset + window.innerHeight;
-      const tableBottom = tableElement.offsetTop + tableElement.offsetHeight;
+        const tableElement = document.getElementById('table');
+        const windowBottom = window.pageYOffset + window.innerHeight;
+        const tableBottom = tableElement.offsetTop + tableElement.offsetHeight;
 
-      if (windowBottom >= tableBottom) {
-        currentPage++;
-        renderTable();
-      }
+        if (windowBottom >= tableBottom) {
+            currentPage++;
+            renderTable();
+        }
     }
 
     window.addEventListener('scroll', loadMoreData);
-
-    // Инициализация таблицы
     renderTable();
   </script>
 </body>
