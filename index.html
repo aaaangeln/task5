@@ -8,32 +8,46 @@
 </head>
 <body>
   <div class="container">
-  <h1>Генератор таблицы</h1>
+    <h1>Генератор таблицы</h1>
 
-  <label for="region">Регион:</label>
-  <select id="region">
-    <option value="США">США</option>
-    <option value="Польша">Польша</option>
-    <option value="Беларусь">Беларусь</option>
-  </select>
+    <label for="region">Регион:</label>
+    <select id="region" onchange="regenerateTable()">
+        <option value="США">США</option>
+        <option value="Польша">Польша</option>
+        <option value="Беларусь">Беларусь</option>
+    </select>
 
-  <label for="errorCount">Количество ошибок:</label>
-  <input type="range" id="errorCount" min="0" max="20" step="0.5" onchange="updateInputValue(this.value)">
-  <input type="text" id="errorCountInput" value="">
+    <label for="errorCount">Количество ошибок:</label>
+<input type="range" id="errorCount" min="0" max="20" step="0.5" onchange="updateInputValue(this.value)">
+<input type="text" id="errorCountInput">
+    
 
-  <label for="seed">Seed:</label>
-  <input type="text" id="seed">
-  <button id="randomSeed">Random</button>
-  <button id="regenerate">Регенерация</button>
+    <label for="seed">Seed:</label>
+    <input type="text" id="seed" onchange="regenerateTable()">
+    <button id="randomSeed" onclick="generateRandomSeed()">Random</button>
 </div>
-  <div class="container">
-    <table id="table"></table>
-  </div>
+<div class="container table-container">
+        <table id="table"></table>
+    </div>
   <script>
-    function updateInputValue(value) {
-      document.getElementById("errorCountInput").value = value;
-    }
 
+function regenerateTable() {
+    const region = document.getElementById('region').value;
+    const errorCount = document.getElementById('errorCount').value;
+    const seed = document.getElementById('seed').value;
+    tableData = generateTable(region, errorCount, seed);
+    currentPage = 1;
+    renderTable();
+}
+function generateRandomSeed() {
+    const seedInput = document.getElementById('seed');
+    seedInput.value = Math.floor(Math.random() * 1000);
+    regenerateTable();
+}
+function updateInputValue(value) {
+    document.getElementById("errorCountInput").value = value;
+    regenerateTable()
+}
     let currentPage = 1;
     const pageSize = 20;
     let tableData = [];
@@ -218,21 +232,20 @@
 
         tableElement.appendChild(thead);
         tableElement.appendChild(tbody);
+
+        window.addEventListener('scroll', loadMoreData);
     }
 
     function loadMoreData() {
-        const tableElement = document.getElementById('table');
-        const windowBottom = window.pageYOffset + window.innerHeight;
-        const tableBottom = tableElement.offsetTop + tableElement.offsetHeight;
+    const tableElement = document.getElementById('table');
+    const windowBottom = window.pageYOffset + window.innerHeight;
+    const tableBottom = tableElement.offsetTop + tableElement.scrollHeight;
 
-        if (windowBottom >= tableBottom) {
-            currentPage++;
-            renderTable();
-        }
+    if (windowBottom >= tableBottom) {
+        currentPage += 10;
+        renderTable();
     }
-
-    window.addEventListener('scroll', loadMoreData);
-    renderTable();
+  }
   </script>
 </body>
 </html>
